@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>👽 Emojify</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      hr {
+        margin: 20px 0;
+      }
+
+      #uploadForm {
+        text-align: center;
+      }
+
+      #fileInput {
+        display: none;
+      }
+
+      #imagePreview {
+        margin: 20px auto;
+      }
+
+      .button {
+        display: block;
+        margin: 20px auto;
+        background-color: #4CAF50;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        
+      }
+
+      .button:hover {
+        cursor: pointer;
+        background-color: #45a049;
+      }
+
+      #dropZone {
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        display: block;
+        width: 200px;
+        height: 200px;
+        margin: 20px auto;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      #dropZone img {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 10px;
+        display: block;
+      }
+
+
+      #dropZone.dragover {
+        background-color: #f0f0f0;
+      }
+
+      #dropZone p {
+        margin: 0;
+      }
+
+      #dropZone p:last-child {
+        font-size: 0.8em;
+      }
+
+      #dropZone p:last-child a {
+        color: #ccc;
+      }
+
+      .fixed {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+        padding: 10px;
+        text-align: center;
+      }
+    </style>
+    <link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
+  </head>
+  <body>
+    <h1>Emojify</h1>
+    <hr>
+    <form id="uploadForm" action="/" method="post" enctype="multipart/form-data">
+        <input id="fileInput" type="file" name="file" accept="image/*" />
+        <label id="dropZone" for="fileInput">
+            <img src="https://emojicdn.elk.sh/👽?style=google" alt="👽" style="width: 100px; height: 100px;">
+            <p>Click or drag an image here to upload</p>
+        </label>
+        <img id="imagePreview" style="max-width: 100%; display: none;">
+        <div style="height: 100px;"></div>
+        <div class="fixed">
+          <input type="submit" value="Emojify" class="button" />
+        </div>
+    </form>
+
+    <script>
+      let fileInput = document.getElementById("fileInput");
+      let uploadForm = document.getElementById("uploadForm");
+
+      let cropper;
+
+      fileInput.addEventListener('change', function (event) {
+          const files = event.target.files;
+          const done = function (url) {
+              fileInput.value = '';
+              imagePreview.src = url;
+              imagePreview.style.display = 'block';
+              if (cropper) {
+                  cropper.destroy();
+              }
+              cropper = new Cropper(imagePreview, {
+                  aspectRatio: 1, // Force square aspect ratio
+                  viewMode: 0,
+                  background: true,
+                  autoCropArea: 1,
+                  
+              });
+          };
+
+          if (files && files.length > 0) {
+              const reader = new FileReader();
+              reader.onload = function (event) {
+                  done(event.target.result);
+        };
+        reader.readAsDataURL(files[0]);
+    }
+});
+uploadForm.addEventListener('submit', function (event) {
+    event.preventDefault();
+
+    if (cropper) {
+        cropper.getCroppedCanvas().toBlob((blob) => {
+            const formData = new FormData();
+
+            formData.append('croppedImage', blob);
+
+            // Add any other form data
+
+            // Use AJAX or Fetch API to send the formData to your backend
+            // Example using Fetch API:
+            fetch('/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                // Download the image 
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'cropped.png';
+                a.click();
+                URL.revokeObjectURL(url);
+
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+});
+
+let dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', function (event) {
+    event.preventDefault();
+    dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', function (event) {
+    event.preventDefault();
+    dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', function (event) {
+    event.preventDefault();
+    dropZone.classList.remove('dragover');
+    fileInput.files = event.dataTransfer.files;
+    const eventChange = new Event('change');
+    fileInput.dispatchEvent(eventChange);
+
+    setTimeout(() => {
+          // scroll to the bottom of the page
+          window.scrollTo(0, document.body.scrollHeight);
+    }, 100);
+
+});
+
+</script>
+</body>
+</html>
+
