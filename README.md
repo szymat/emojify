@@ -4,6 +4,9 @@ Emojify is a simple tool to remove background from images and crop into squares 
 
 Inspired by https://github.com/codediodeio/rembg-webapp-tutorial/tree/main FIreship.io code.
 
+![Emojify](/docs/i1.png)
+![Emojify](/docs/i2.png)
+
 ## Installation
 
 ```bash
